@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import { collection, query, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
@@ -76,12 +76,12 @@ const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
 
   // Fill in order data
   orders.forEach((order: any) => {
-    const rawDate = order.orderDate?.toDate ? order.orderDate.toDate() : (order.orderDate || order.createdAt)
+    const rawDate = order.orderDate?.toDate ? order.orderDate.toDate() : order.orderDate || order.createdAt
     if (!rawDate) return
 
     const orderDate = new Date(rawDate)
     const key = orderDate.toISOString().split("T")[0]
-    
+
     if (data[key]) {
       data[key].earnings += order.total || 0
       data[key].orders += 1
@@ -100,27 +100,46 @@ const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
  * 3. ThunkApiConfig: { rejectValue: string } (for custom error messages)
  */
 
-export const fetchDashboardData = createAsyncThunk<
-  FetchDashboardResponse,
-  string | undefined,
-  { rejectValue: string }
->(
+export const fetchDashboardData = createAsyncThunk<FetchDashboardResponse, string | undefined, { rejectValue: string }>(
   "dashboard/fetchDashboardData",
   async (timeRange = "weekly", { rejectWithValue }) => {
     try {
       const q = query(collection(db, "orders"))
       const querySnapshot = await getDocs(q)
-      
-      const orders = querySnapshot.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }))
 
-      // Calculate metrics
+      const orders = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
+        const STATUS_MAP: Record<number, string> = {
+          0: "confirmed",
+          1: "preparing",
+          2: "ready",
+          3: "on-the-way",
+          4: "completed",
+        }
+
+        const status = STATUS_MAP[data.currentStatusIndex ?? 0] || "confirmed"
+
+        return {
+          ...data,
+          status,
+          id: doc.id,
+        }
+      })
+
+      // Calculate metrics using the mapped status
       const totalOrders = orders.length
       const totalEarnings = orders.reduce((sum: number, order: any) => sum + (Number(order.total) || 0), 0)
-      const completedOrders = orders.filter((o: any) => o.status === "delivered").length
-      const pendingOrders = orders.filter((o: any) => o.status !== "delivered" && o.status !== "cancelled").length
+      const completedOrders = orders.filter((o: any) => o.status === "completed").length
+      const pendingOrders = orders.filter((o: any) => o.status !== "completed" && o.status !== "cancelled").length
+
+      console.log(
+        "[v0] Dashboard calculation - Total:",
+        totalOrders,
+        "Completed:",
+        completedOrders,
+        "Pending:",
+        pendingOrders,
+      )
 
       const chartData = generateChartData(orders, timeRange || "weekly")
 
@@ -137,7 +156,7 @@ export const fetchDashboardData = createAsyncThunk<
       // Returns the error message as the payload for 'rejected' case
       return rejectWithValue(error.message || "Failed to fetch dashboard data")
     }
-  }
+  },
 )
 
 // --- Slice ---

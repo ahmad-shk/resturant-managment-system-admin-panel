@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useAppDispatch, useAppSelector, fetchDashboardData } from "@/lib/store"
+import { useAppDispatch, useAppSelector, fetchDashboardData, fetchOrders } from "@/lib/store"
 import { TrendingUp, ShoppingCart, CheckCircle, Clock } from "lucide-react"
 import * as echarts from "echarts"
 
 export default function AdminDashboard() {
   const dispatch = useAppDispatch()
   const { data: dashboardData, chartData, isLoading } = useAppSelector((state) => state.dashboard)
+  const { items: orders } = useAppSelector((state) => state.orders)
   const [timeRange, setTimeRange] = useState<
     "daily" | "weekly" | "15days" | "monthly" | "3months" | "6months" | "yearly"
   >("weekly")
@@ -23,6 +24,11 @@ export default function AdminDashboard() {
     setTimeRange(newRange)
     dispatch(fetchDashboardData(newRange))
   }
+
+  useEffect(() => {
+    dispatch(fetchOrders())
+    dispatch(fetchDashboardData(timeRange))
+  }, [dispatch, timeRange])
 
   // Initialize and update Earnings Line Chart
   useEffect(() => {
@@ -227,6 +233,34 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  const getTopSellingItems = () => {
+    const itemMap = new Map<string, { name: string; quantity: number; total: number; image?: string }>()
+
+    orders.forEach((order) => {
+      order.items?.forEach((item) => {
+        const key = item.name
+        if (itemMap.has(key)) {
+          const existing = itemMap.get(key)!
+          existing.quantity += item.quantity
+          existing.total += item.quantity * (item.price || 0)
+        } else {
+          itemMap.set(key, {
+            name: item.name,
+            quantity: item.quantity,
+            total: item.quantity * (item.price || 0),
+            image: item.image,
+          })
+        }
+      })
+    })
+
+    return Array.from(itemMap.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10)
+  }
+
+  const topItems = getTopSellingItems()
+
   const stats = [
     {
       icon: ShoppingCart,
@@ -347,6 +381,42 @@ export default function AdminDashboard() {
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
         <h2 className="text-white font-semibold mb-4">Order Status Distribution</h2>
         <div ref={pieChartRef} className="h-[300px] w-full" />
+      </div>
+
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+        <h2 className="text-white font-semibold mb-4">Top Selling Items</h2>
+        {topItems.length === 0 ? (
+          <div className="text-center text-slate-400 py-8">
+            <p>No item sales data available</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th className="text-left py-3 px-4 text-slate-400 font-semibold">Item Name</th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-semibold">Quantity Sold</th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-semibold">Total Revenue</th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-semibold">Rank</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topItems.map((item, index) => (
+                  <tr key={item.name} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                    <td className="py-3 px-4 text-white font-medium">{item.name}</td>
+                    <td className="text-right py-3 px-4 text-slate-300">{item.quantity}</td>
+                    <td className="text-right py-3 px-4 text-emerald-400 font-semibold">Rs. {item.total.toFixed(0)}</td>
+                    <td className="text-right py-3 px-4">
+                      <span className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold">
+                        #{index + 1}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

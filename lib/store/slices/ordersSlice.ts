@@ -17,7 +17,7 @@ export interface Order {
   customerPhone?: string
   items: OrderItem[]
   total: number
-  status: "confirmed" | "preparing" | "ready" | "on-the-way" | "delivered"
+  status: "confirmed" | "preparing" | "ready" | "on-the-way" | "completed" | "canceled"
   orderDate: string
   deliveryAddress?: string
   delivery?: number
@@ -42,7 +42,8 @@ const STATUS_MAP: Record<number, Order["status"]> = {
   1: "preparing",
   2: "ready",
   3: "on-the-way",
-  4: "delivered",
+  4: "completed",
+  5: "canceled",
 }
 
 // Async thunk to fetch orders
@@ -105,7 +106,8 @@ const STATUS_INDEX_MAP: Record<Order["status"], number> = {
   preparing: 1,
   ready: 2,
   "on-the-way": 3,
-  delivered: 4,
+  completed: 4,
+  canceled: 5,
 }
 
 // Async thunk to update order status

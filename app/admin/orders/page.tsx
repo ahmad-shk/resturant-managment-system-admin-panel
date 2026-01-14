@@ -2,16 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector, fetchOrders, updateOrderStatus } from "@/lib/store"
+import { useToast } from "@/components/toast-provider"
 import { deleteDoc, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Trash2, RefreshCw } from "lucide-react"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 export default function OrdersPage() {
   const dispatch = useAppDispatch()
+  const { addToast } = useToast()
   const { items: orders, isLoading, error } = useAppSelector((state) => state.orders)
   const [filteredOrders, setFilteredOrders] = useState(orders)
   const [statusFilter, setStatusFilter] = useState("all")
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; orderId: string | null }>({
+    isOpen: false,
+    orderId: null,
+  })
 
   useEffect(() => {
     if (statusFilter === "all") {
@@ -28,22 +35,24 @@ export default function OrdersPage() {
   const handleUpdateStatus = async (orderId: string, newStatus: any) => {
     try {
       await dispatch(updateOrderStatus({ id: orderId, status: newStatus })).unwrap()
+      addToast("Order status updated successfully!", "success")
     } catch (error) {
       console.error("Error updating order status:", error)
-      alert("Error updating order status. Please try again.")
+      addToast("Error updating order status. Please try again.", "error")
     }
   }
 
-  const deleteOrder = async (orderId: string) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      try {
-        await deleteDoc(doc(db, "orders", orderId))
-        // Refresh orders after delete
-        dispatch(fetchOrders())
-      } catch (error) {
-        console.error("Error deleting order:", error)
-        alert("Error deleting order. Please try again.")
-      }
+  const deleteOrder = async () => {
+    if (!deleteConfirmation.orderId) return
+
+    try {
+      await deleteDoc(doc(db, "orders", deleteConfirmation.orderId))
+      dispatch(fetchOrders())
+      addToast("Order deleted successfully!", "success")
+      setDeleteConfirmation({ isOpen: false, orderId: null })
+    } catch (error) {
+      console.error("Error deleting order:", error)
+      addToast("Error deleting order. Please try again.", "error")
     }
   }
 
@@ -53,8 +62,8 @@ export default function OrdersPage() {
       preparing: "bg-yellow-900 text-yellow-200",
       ready: "bg-purple-900 text-purple-200",
       "on-the-way": "bg-indigo-900 text-indigo-200",
-      delivered: "bg-green-900 text-green-200",
-      cancelled: "bg-red-900 text-red-200",
+      completed: "bg-green-900 text-green-200",
+      canceled: "bg-red-900 text-red-200",
     }
     return colors[status] || "bg-slate-700 text-slate-300"
   }
@@ -85,7 +94,7 @@ export default function OrdersPage() {
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
         <p className="text-white font-semibold mb-4">Filter by Status:</p>
         <div className="flex flex-wrap gap-2">
-          {["all", "confirmed", "preparing", "ready", "on-the-way", "delivered"].map((status) => (
+          {["all", "confirmed", "preparing", "ready", "on-the-way", "completed", "canceled"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -199,11 +208,11 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Status Update */}
-                  {order.status !== "delivered" && (
+                  {order.status !== "completed" && order.status !== "canceled" && (
                     <div>
                       <h3 className="text-white font-semibold mb-2">Update Status</h3>
                       <div className="flex flex-wrap gap-2">
-                        {["confirmed", "preparing", "ready", "on-the-way", "delivered"].map((status) => (
+                        {["confirmed", "preparing", "ready", "on-the-way", "completed", "canceled"].map((status) => (
                           <button
                             key={status}
                             onClick={() => handleUpdateStatus(order.id, status)}
@@ -223,7 +232,7 @@ export default function OrdersPage() {
                   {/* Delete Button */}
                   <div>
                     <button
-                      onClick={() => deleteOrder(order.id)}
+                      onClick={() => setDeleteConfirmation({ isOpen: true, orderId: order.id })}
                       className="w-full bg-red-900 hover:bg-red-800 text-red-100 py-2 px-4 rounded font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <Trash2 size={18} />
@@ -236,6 +245,17 @@ export default function OrdersPage() {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isOpen={deleteConfirmation.isOpen}
+        onConfirm={deleteOrder}
+        onCancel={() => setDeleteConfirmation({ isOpen: false, orderId: null })}
+      />
     </div>
   )
 }
