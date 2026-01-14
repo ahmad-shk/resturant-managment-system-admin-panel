@@ -1,7 +1,11 @@
 // Firebase Realtime Database utilities
-import { getDatabase, ref, get, set, remove, onValue } from "firebase/database"
+import { getDatabase, ref, get, set, onValue } from "firebase/database"
 import app from "@/lib/firebase"
-import { syncOrderStatusToAllDatabases, syncOrderUpdateToAllDatabases } from "@/lib/firebase-sync"
+import {
+  syncOrderStatusToAllDatabases,
+  syncOrderUpdateToAllDatabases,
+  syncOrderDeleteToAllDatabases,
+} from "@/lib/firebase-sync"
 
 const database = getDatabase(app)
 
@@ -113,9 +117,8 @@ export async function updateOrderStatus(orderId: string, status: RealtimeOrder["
 // Delete order
 export async function deleteOrder(orderId: string) {
   try {
-    const orderRef = ref(database, `orders/${orderId}`)
-    await remove(orderRef)
-    console.log("[v0] Order deleted:", orderId)
+    await syncOrderDeleteToAllDatabases(orderId)
+    console.log("[v0] Order deleted from both databases:", orderId)
   } catch (error) {
     console.error("[v0] Error deleting order:", error)
     throw error

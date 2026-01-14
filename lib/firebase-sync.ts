@@ -1,6 +1,5 @@
-// Utility to sync order updates to both Firestore and Realtime Database
-import { update, ref } from "firebase/database"
-import { updateDoc, doc } from "firebase/firestore"
+import { update, ref, remove } from "firebase/database"
+import { updateDoc, doc, deleteDoc } from "firebase/firestore"
 import { rtdb, db } from "@/lib/firebase"
 
 export async function syncOrderStatusToAllDatabases(
@@ -53,6 +52,25 @@ export async function syncOrderUpdateToAllDatabases(orderId: string, updates: Re
     console.log("[v0] Successfully synced order update to both databases:", orderId)
   } catch (error) {
     console.error("[v0] Error syncing order update to databases:", error)
+    throw error
+  }
+}
+
+export async function syncOrderDeleteToAllDatabases(orderId: string) {
+  try {
+    console.log("[v0] Syncing delete to both databases:", orderId)
+
+    const deletePromises = [
+      // Delete from Realtime Database
+      remove(ref(rtdb, `orders/${orderId}`)),
+      // Delete from Firestore
+      deleteDoc(doc(db, "orders", orderId)),
+    ]
+
+    await Promise.all(deletePromises)
+    console.log("[v0] Successfully deleted order from both databases:", orderId)
+  } catch (error) {
+    console.error("[v0] Error deleting order from databases:", error)
     throw error
   }
 }
