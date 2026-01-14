@@ -93,8 +93,10 @@ export const fetchOrders = createAsyncThunk("orders/fetchOrders", async (_, { re
       } as Order
     })
 
-    console.log("[v0] Processed orders:", orders)
-    return orders
+    const sortedOrders = orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
+
+    console.log("[v0] Processed orders:", sortedOrders)
+    return sortedOrders
   } catch (error: any) {
     console.error("[v0] Error fetching orders:", error)
     return rejectWithValue(error.message || "Failed to fetch orders")

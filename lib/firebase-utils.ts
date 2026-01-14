@@ -48,7 +48,15 @@ export const registerUser = async (email: string, password: string, name: string
 }
 
 export const loginUser = async (email: string, password: string): Promise<UserCredential> => {
-  return signInWithEmailAndPassword(auth, email, password)
+  const userCredential = await signInWithEmailAndPassword(auth, email, password)
+
+  const adminProfile = await getAdminProfile(userCredential.user.uid)
+  if (!adminProfile || adminProfile.role !== "admin") {
+    await auth.signOut()
+    throw new Error("You are not registered. Please contact administrator")
+  }
+
+  return userCredential
 }
 
 // Order Functions
@@ -137,6 +145,7 @@ export interface AdminUser {
   name: string
   restaurantName: string
   restaurantPhone: string
+  role: "admin"
   createdAt: Date
 }
 
@@ -144,6 +153,7 @@ export const createAdminProfile = async (userId: string, data: Omit<AdminUser, "
   try {
     await setDoc(doc(db, "admins", userId), {
       ...data,
+      role: "admin",
       uid: userId,
       createdAt: new Date(),
     })

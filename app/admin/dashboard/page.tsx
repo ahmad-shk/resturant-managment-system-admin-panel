@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const earningsChartInstance = useRef<echarts.ECharts | null>(null)
   const ordersChartInstance = useRef<echarts.ECharts | null>(null)
   const pieChartInstance = useRef<echarts.ECharts | null>(null)
+  const isMounted = useRef(true)
 
   const handleTimeRangeChange = (newRange: typeof timeRange) => {
     setTimeRange(newRange)
@@ -26,8 +27,10 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    dispatch(fetchOrders())
-    dispatch(fetchDashboardData(timeRange))
+    if (isMounted.current) {
+      dispatch(fetchOrders())
+      dispatch(fetchDashboardData(timeRange))
+    }
   }, [dispatch, timeRange])
 
   // Initialize and update Earnings Line Chart
@@ -87,7 +90,9 @@ export default function AdminDashboard() {
       ],
     }
 
-    earningsChartInstance.current.setOption(option)
+    if (isMounted.current && earningsChartInstance.current) {
+      earningsChartInstance.current.setOption(option)
+    }
   }, [chartData])
 
   // Initialize and update Orders Bar Chart
@@ -145,7 +150,9 @@ export default function AdminDashboard() {
       ],
     }
 
-    ordersChartInstance.current.setOption(option)
+    if (isMounted.current && ordersChartInstance.current) {
+      ordersChartInstance.current.setOption(option)
+    }
   }, [chartData])
 
   // Initialize and update Pie Chart for Order Status
@@ -213,23 +220,36 @@ export default function AdminDashboard() {
       ],
     }
 
-    pieChartInstance.current.setOption(option)
+    if (isMounted.current && pieChartInstance.current) {
+      pieChartInstance.current.setOption(option)
+    }
   }, [dashboardData])
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      earningsChartInstance.current?.resize()
-      ordersChartInstance.current?.resize()
-      pieChartInstance.current?.resize()
+      if (isMounted.current) {
+        earningsChartInstance.current?.resize()
+        ordersChartInstance.current?.resize()
+        pieChartInstance.current?.resize()
+      }
     }
 
     window.addEventListener("resize", handleResize)
     return () => {
       window.removeEventListener("resize", handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
       earningsChartInstance.current?.dispose()
       ordersChartInstance.current?.dispose()
       pieChartInstance.current?.dispose()
+      earningsChartInstance.current = null
+      ordersChartInstance.current = null
+      pieChartInstance.current = null
     }
   }, [])
 

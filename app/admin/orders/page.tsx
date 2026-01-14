@@ -142,7 +142,7 @@ export default function OrdersPage() {
                 className="p-4 cursor-pointer hover:bg-slate-700/50 transition-colors"
                 onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                   <div>
                     <p className="text-slate-400 text-sm">Order ID</p>
                     <p className="text-white font-semibold">{order.id}</p>
@@ -154,6 +154,10 @@ export default function OrdersPage() {
                   <div>
                     <p className="text-slate-400 text-sm">Total</p>
                     <p className="text-white font-semibold">Rs. {order.total.toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 text-sm">Order Date</p>
+                    <p className="text-white font-semibold text-xs">{formatDate(order.orderDate)}</p>
                   </div>
                   <div className="flex items-center justify-between">
                     <span
@@ -212,7 +216,7 @@ export default function OrdersPage() {
                     <div>
                       <h3 className="text-white font-semibold mb-2">Update Status</h3>
                       <div className="flex flex-wrap gap-2">
-                        {["confirmed", "preparing", "ready", "on-the-way", "completed", "canceled"].map((status) => (
+                        {["confirmed", "preparing", "ready", "on-the-way", "completed"].map((status) => (
                           <button
                             key={status}
                             onClick={() => handleUpdateStatus(order.id, status)}
