@@ -13,14 +13,7 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        // Ignore these action types
-        ignoredActions: ["profile/setProfile", "orders/setOrders"],
-        // Ignore these field paths in all actions
-        ignoredActionPaths: ["payload.createdAt", "payload.orderDate"],
-        // Ignore these paths in the state
-        ignoredPaths: ["profile.data.createdAt", "orders.items"],
-      },
+      serializableCheck: false, // Recommended when working with Firebase Timestamps/Dates
     }),
 })
 

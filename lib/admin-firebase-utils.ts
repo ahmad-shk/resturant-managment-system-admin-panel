@@ -1,6 +1,6 @@
-import { doc, getDoc, setDoc, collection, query, getDocs, updateDoc, deleteDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, collection, query, getDocs, updateDoc, deleteDoc,addDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import type { MenuItem } from "@/lib/firebase-menu"
+import type { MenuItem } from "@/lib/store/slices/menuSlice"
 
 export interface AdminUser {
   uid: string
@@ -87,8 +87,8 @@ export const deleteAdminOrder = async (orderId: string) => {
 // Menu item operations
 export const createMenuItem = async (item: Omit<MenuItem, "id">): Promise<string> => {
   try {
-    const docRef = await setDoc(doc(collection(db, "menus")), item)
-    return docRef.id
+    const docRef = await addDoc(collection(db, "menus"), item);
+    return docRef.id; // Now .id exists!
   } catch (error) {
     console.error("Error creating menu item:", error)
     throw error

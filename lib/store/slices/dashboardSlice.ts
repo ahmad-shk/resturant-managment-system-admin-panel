@@ -1,6 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
 import { collection, query, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+
+// --- Interfaces ---
 
 interface DashboardData {
   totalOrders: number
@@ -23,6 +25,14 @@ interface DashboardState {
   lastFetched: number | null
 }
 
+// The shape of what the Thunk returns on success
+interface FetchDashboardResponse {
+  data: DashboardData
+  chartData: ChartDataPoint[]
+}
+
+// --- Initial State ---
+
 const initialState: DashboardState = {
   data: {
     totalOrders: 0,
@@ -36,7 +46,8 @@ const initialState: DashboardState = {
   lastFetched: null,
 }
 
-// Helper function to format date
+// --- Helper Functions ---
+
 const formatDate = (date: Date, range: string) => {
   if (range === "yearly") {
     return date.toLocaleDateString("en-US", { month: "short" })
@@ -44,7 +55,6 @@ const formatDate = (date: Date, range: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
-// Helper function to generate chart data
 const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
   const now = new Date()
   const data: { [key: string]: ChartDataPoint } = {}
@@ -56,7 +66,7 @@ const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
   if (range === "6months") daysToShow = 180
   if (range === "yearly") daysToShow = 365
 
-  // Initialize dates
+  // Initialize empty date buckets
   for (let i = daysToShow - 1; i >= 0; i--) {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
@@ -66,8 +76,12 @@ const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
 
   // Fill in order data
   orders.forEach((order: any) => {
-    const orderDate = new Date(order.orderDate || order.createdAt)
+    const rawDate = order.orderDate?.toDate ? order.orderDate.toDate() : (order.orderDate || order.createdAt)
+    if (!rawDate) return
+
+    const orderDate = new Date(rawDate)
     const key = orderDate.toISOString().split("T")[0]
+    
     if (data[key]) {
       data[key].earnings += order.total || 0
       data[key].orders += 1
@@ -77,25 +91,38 @@ const generateChartData = (orders: any[], range: string): ChartDataPoint[] => {
   return Object.values(data)
 }
 
-// Async thunk to fetch dashboard data
-export const fetchDashboardData = createAsyncThunk(
+// --- Async Thunk ---
+
+/**
+ * createAsyncThunk Generics:
+ * 1. ReturnType: FetchDashboardResponse
+ * 2. ArgType: string (the timeRange)
+ * 3. ThunkApiConfig: { rejectValue: string } (for custom error messages)
+ */
+
+export const fetchDashboardData = createAsyncThunk<
+  FetchDashboardResponse,
+  string | undefined,
+  { rejectValue: string }
+>(
   "dashboard/fetchDashboardData",
   async (timeRange = "weekly", { rejectWithValue }) => {
     try {
       const q = query(collection(db, "orders"))
       const querySnapshot = await getDocs(q)
+      
       const orders = querySnapshot.docs.map((doc) => ({
         ...doc.data(),
         id: doc.id,
       }))
 
-      // Calculate dashboard metrics
+      // Calculate metrics
       const totalOrders = orders.length
-      const totalEarnings = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0)
+      const totalEarnings = orders.reduce((sum: number, order: any) => sum + (Number(order.total) || 0), 0)
       const completedOrders = orders.filter((o: any) => o.status === "delivered").length
       const pendingOrders = orders.filter((o: any) => o.status !== "delivered" && o.status !== "cancelled").length
 
-      const chartData = generateChartData(orders, timeRange)
+      const chartData = generateChartData(orders, timeRange || "weekly")
 
       return {
         data: {
@@ -107,10 +134,13 @@ export const fetchDashboardData = createAsyncThunk(
         chartData,
       }
     } catch (error: any) {
+      // Returns the error message as the payload for 'rejected' case
       return rejectWithValue(error.message || "Failed to fetch dashboard data")
     }
-  },
+  }
 )
+
+// --- Slice ---
 
 const dashboardSlice = createSlice({
   name: "dashboard",
@@ -131,13 +161,15 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardData.fulfilled, (state, action) => {
         state.isLoading = false
+        // action.payload is strictly typed to FetchDashboardResponse
         state.data = action.payload.data
         state.chartData = action.payload.chartData
         state.lastFetched = Date.now()
       })
       .addCase(fetchDashboardData.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.payload as string
+        // action.payload is strictly typed to string via rejectWithValue
+        state.error = action.payload ?? "An unknown error occurred"
       })
   },
 })
