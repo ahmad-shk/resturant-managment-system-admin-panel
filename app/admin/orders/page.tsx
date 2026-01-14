@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAppDispatch, useAppSelector, fetchOrders, updateOrderStatus } from "@/lib/store"
+import { useState, useEffect, useRef } from "react"
+import { useAppDispatch, useAppSelector, fetchOrders, setupOrdersListener, updateOrderStatus } from "@/lib/store"
 import { useToast } from "@/components/toast-provider"
 import { deleteDoc, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
@@ -19,6 +19,23 @@ export default function OrdersPage() {
     isOpen: false,
     orderId: null,
   })
+  const unsubscribeRef = useRef<any>(null)
+
+  useEffect(() => {
+    console.log("[v0] Orders page mounted, setting up real-time listener")
+    dispatch(setupOrdersListener()).then((result: any) => {
+      if (result.payload) {
+        unsubscribeRef.current = result.payload
+      }
+    })
+
+    return () => {
+      console.log("[v0] Orders page unmounted, cleaning up listener")
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current()
+      }
+    }
+  }, [dispatch])
 
   useEffect(() => {
     if (statusFilter === "all") {

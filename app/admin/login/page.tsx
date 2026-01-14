@@ -146,7 +146,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* <div className="mt-6 text-center">
+          <div className="mt-6 text-center">
             <button
               type="button"
               onClick={() => {
@@ -157,7 +157,7 @@ export default function AdminLoginPage() {
             >
               {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign up"}
             </button>
-          </div> */}
+          </div>
         </div>
       </div>
     </div>
