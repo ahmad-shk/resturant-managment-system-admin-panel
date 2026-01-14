@@ -1,6 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit"
 import { collection, query, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+
+// --- Interfaces ---
 
 export interface MenuItem {
   id: string
@@ -17,7 +19,7 @@ export interface MenuItem {
 interface MenuState {
   items: MenuItem[]
   isLoading: boolean
-  isAdding: boolean // Added loading state for add operation
+  isAdding: boolean 
   error: string | null
   lastFetched: number | null
 }
@@ -25,22 +27,26 @@ interface MenuState {
 const initialState: MenuState = {
   items: [],
   isLoading: false,
-  isAdding: false, // Initial state for add operation
+  isAdding: false,
   error: null,
   lastFetched: null,
 }
 
-// Async thunk to fetch menu items
-export const fetchMenuItems = createAsyncThunk("menu/fetchMenuItems", async (_, { rejectWithValue }) => {
+// --- Async Thunks with explicit Generics ---
+
+// 1. Fetch Menu Items
+export const fetchMenuItems = createAsyncThunk<
+  MenuItem[],           // Return type
+  void,                 // No arguments
+  { rejectValue: string }
+>("menu/fetchMenuItems", async (_, { rejectWithValue }) => {
   try {
-    console.log("[v0] Fetching menu items...")
     const q = query(collection(db, "menus"))
     const querySnapshot = await getDocs(q)
     const items = querySnapshot.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id,
     })) as MenuItem[]
-    console.log("[v0] Menu items fetched:", items.length)
     return items
   } catch (error: any) {
     console.error("[v0] Error fetching menu:", error)
@@ -48,30 +54,40 @@ export const fetchMenuItems = createAsyncThunk("menu/fetchMenuItems", async (_, 
   }
 })
 
-// Async thunk to add menu item
-export const addMenuItem = createAsyncThunk(
+// 2. Add Menu Item
+// Generics: <ReturnType, ArgumentType, ThunkApiConfig>
+export const addMenuItem = createAsyncThunk<
+  MenuItem,
+  Omit<MenuItem, "id">,
+  { rejectValue: string }
+>(
   "menu/addMenuItem",
   async (itemData: Omit<MenuItem, "id">, { rejectWithValue }) => {
     try {
       console.log("[v0] Adding menu item:", itemData.name)
       const docRef = await addDoc(collection(db, "menus"), itemData)
       console.log("[v0] Menu item added with ID:", docRef.id)
+      
+      // Return the full item including the new Firestore ID
       return { ...itemData, id: docRef.id } as MenuItem
     } catch (error: any) {
       console.error("[v0] Error adding menu item:", error)
-      return rejectWithValue(error.message || "Failed to add menu item")
+      // FIX: Ensure error.message exists or provide fallback to avoid 'undefined' alert
+      return rejectWithValue(error.message || "Failed to add menu item. Check permissions.")
     }
   },
 )
 
-// Async thunk to update menu item
-export const updateMenuItem = createAsyncThunk(
+// 3. Update Menu Item
+export const updateMenuItem = createAsyncThunk<
+  { id: string; data: Partial<MenuItem> },
+  { id: string; data: Partial<MenuItem> },
+  { rejectValue: string }
+>(
   "menu/updateMenuItem",
-  async ({ id, data }: { id: string; data: Partial<MenuItem> }, { rejectWithValue }) => {
+  async ({ id, data }, { rejectWithValue }) => {
     try {
-      console.log("[v0] Updating menu item:", id)
       await updateDoc(doc(db, "menus", id), data)
-      console.log("[v0] Menu item updated")
       return { id, data }
     } catch (error: any) {
       console.error("[v0] Error updating menu item:", error)
@@ -80,18 +96,22 @@ export const updateMenuItem = createAsyncThunk(
   },
 )
 
-// Async thunk to delete menu item
-export const deleteMenuItem = createAsyncThunk("menu/deleteMenuItem", async (id: string, { rejectWithValue }) => {
+// 4. Delete Menu Item
+export const deleteMenuItem = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("menu/deleteMenuItem", async (id: string, { rejectWithValue }) => {
   try {
-    console.log("[v0] Deleting menu item:", id)
     await deleteDoc(doc(db, "menus", id))
-    console.log("[v0] Menu item deleted")
     return id
   } catch (error: any) {
     console.error("[v0] Error deleting menu item:", error)
     return rejectWithValue(error.message || "Failed to delete menu item")
   }
 })
+
+// --- Slice ---
 
 const menuSlice = createSlice({
   name: "menu",
@@ -105,6 +125,7 @@ const menuSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Handlers
       .addCase(fetchMenuItems.pending, (state) => {
         state.isLoading = true
         state.error = null
@@ -116,8 +137,10 @@ const menuSlice = createSlice({
       })
       .addCase(fetchMenuItems.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.payload as string
+        state.error = action.payload ?? "Failed to fetch menu"
       })
+
+      // Add Handlers
       .addCase(addMenuItem.pending, (state) => {
         state.isAdding = true
         state.error = null
@@ -128,14 +151,19 @@ const menuSlice = createSlice({
       })
       .addCase(addMenuItem.rejected, (state, action) => {
         state.isAdding = false
-        state.error = action.payload as string
+        // action.payload is now strictly typed as a string
+        state.error = action.payload ?? "Error saving item"
       })
+
+      // Update Handler
       .addCase(updateMenuItem.fulfilled, (state, action) => {
         const index = state.items.findIndex((item) => item.id === action.payload.id)
         if (index !== -1) {
           state.items[index] = { ...state.items[index], ...action.payload.data }
         }
       })
+
+      // Delete Handler
       .addCase(deleteMenuItem.fulfilled, (state, action) => {
         state.items = state.items.filter((item) => item.id !== action.payload)
       })
