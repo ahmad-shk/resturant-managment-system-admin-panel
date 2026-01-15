@@ -157,7 +157,7 @@ export function OrderForm({ onSubmit, onCancel, isLoading = false }: OrderFormPr
                 <div className="flex-1">
                   <p className="text-white">{item.name}</p>
                   <p className="text-slate-400 text-sm">
-                    Rs. {item.price} x {item.quantity} = Rs. {item.price * item.quantity}
+                    € {item.price} x {item.quantity} = € {item.price * item.quantity}
                   </p>
                 </div>
                 <button
@@ -215,7 +215,7 @@ export function OrderForm({ onSubmit, onCancel, isLoading = false }: OrderFormPr
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-white text-sm font-medium mb-2 block">Delivery Charge (Rs.)</label>
+            <label className="text-white text-sm font-medium mb-2 block">Delivery Charge (€)</label>
             <input
               type="number"
               value={delivery}
@@ -226,10 +226,10 @@ export function OrderForm({ onSubmit, onCancel, isLoading = false }: OrderFormPr
           </div>
           <div>
             <label className="text-white text-sm font-medium mb-2 block">
-              Total: Rs. {calculateTotal().toFixed(0)}
+              Total: € {calculateTotal().toFixed(0)}
             </label>
             <div className="bg-slate-700 rounded-lg px-4 py-2 text-orange-400 font-semibold">
-              Rs. {calculateTotal().toFixed(0)}
+              € {calculateTotal().toFixed(0)}
             </div>
           </div>
         </div>

@@ -69,7 +69,7 @@ export default function AdminDashboard() {
       yAxis: {
         type: "value",
         axisLine: { lineStyle: { color: "#475569" } },
-        axisLabel: { color: "#94a3b8", formatter: "${value}" },
+        axisLabel: { color: "#94a3b8", formatter: "€{value}" },
         splitLine: { lineStyle: { color: "#334155" } },
       },
       series: [
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
     {
       icon: TrendingUp,
       label: "Total Earnings",
-      value: `$${dashboardData.totalEarnings.toFixed(2)}`,
+      value: `€${dashboardData.totalEarnings.toFixed(2)}`,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                   <tr key={item.name} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
                     <td className="py-3 px-4 text-white font-medium">{item.name}</td>
                     <td className="text-right py-3 px-4 text-slate-300">{item.quantity}</td>
-                    <td className="text-right py-3 px-4 text-emerald-400 font-semibold">Rs. {item.total.toFixed(0)}</td>
+                    <td className="text-right py-3 px-4 text-emerald-400 font-semibold">€ {item.total.toFixed(0)}</td>
                     <td className="text-right py-3 px-4">
                       <span className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold">
                         #{index + 1}
