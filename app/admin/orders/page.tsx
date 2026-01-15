@@ -35,32 +35,32 @@ export default function OrdersPage() {
   const unsubscribeRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    console.log("[v0] Setting up real-time listener for orders")
+    console.log("admin Setting up real-time listener for orders")
     setIsLoading(true)
     setError(null)
 
     try {
       unsubscribeRef.current = subscribeToOrders(
         (data) => {
-          console.log("[v0] Orders updated:", data.length)
+          console.log("admin Orders updated:", data.length)
           setOrders(data)
           setIsLoading(false)
         },
         (err) => {
-          console.error("[v0] Error in real-time listener:", err)
+          console.error("admin Error in real-time listener:", err)
           setError(err.message)
           setIsLoading(false)
         },
       )
     } catch (err) {
-      console.error("[v0] Error setting up listener:", err)
+      console.error("admin Error setting up listener:", err)
       setError(err instanceof Error ? err.message : "Failed to setup real-time listener")
       setIsLoading(false)
     }
 
     return () => {
       if (unsubscribeRef.current) {
-        console.log("[v0] Cleaning up real-time listener")
+        console.log("admin Cleaning up real-time listener")
         unsubscribeRef.current()
       }
     }
@@ -81,7 +81,7 @@ export default function OrdersPage() {
       addToast("Order created successfully!", "success")
       setShowCreateForm(false)
     } catch (err) {
-      console.error("[v0] Error creating order:", err)
+      console.error("admin Error creating order:", err)
       addToast(err instanceof Error ? err.message : "Error creating order. Please try again.", "error")
     } finally {
       setIsLoading(false)
@@ -93,11 +93,11 @@ export default function OrdersPage() {
       setIsLoading(true)
       await updateOrderStatus(orderId, newStatus)
       addToast("Order status updated in both databases!", "success")
-      console.log("[v0] Status update completed for:", orderId)
+      console.log("admin Status update completed for:", orderId)
       setEditingOrder(null)
       setEditingStatus("")
     } catch (err) {
-      console.error("[v0] Error updating status:", err)
+      console.error("admin Error updating status:", err)
       addToast("Error updating order status. Please try again.", "error")
     } finally {
       setIsLoading(false)
@@ -112,7 +112,7 @@ export default function OrdersPage() {
       addToast("Order updated successfully!", "success")
       setEditingOrder(null)
     } catch (err) {
-      console.error("[v0] Error updating order:", err)
+      console.error("admin Error updating order:", err)
       addToast("Error updating order. Please try again.", "error")
     } finally {
       setIsLoading(false)
@@ -128,7 +128,7 @@ export default function OrdersPage() {
       addToast("Order deleted successfully!", "success")
       setDeleteConfirmation({ isOpen: false, orderId: null })
     } catch (err) {
-      console.error("[v0] Error deleting order:", err)
+      console.error("admin Error deleting order:", err)
       addToast("Error deleting order. Please try again.", "error")
     } finally {
       setIsLoading(false)
@@ -184,13 +184,13 @@ export default function OrdersPage() {
             <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
             Refresh
           </button>
-          <button
+          {/* <button
             onClick={() => setShowCreateForm(true)}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
             <Plus size={18} />
             New Order
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -198,7 +198,7 @@ export default function OrdersPage() {
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
         <p className="text-white font-semibold mb-4">Filter by Status:</p>
         <div className="flex flex-wrap gap-2">
-          {["all", "confirmed", "preparing", "ready", "on-the-way", "completed", "canceled"].map((status) => (
+          {["all", "confirmed", "preparing", "ready", "on-the-way", "completed"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -319,7 +319,7 @@ export default function OrdersPage() {
                     <div>
                       <h3 className="text-white font-semibold mb-2">Update Status</h3>
                       <div className="flex flex-wrap gap-2">
-                        {(["confirmed", "preparing", "ready", "on-the-way", "completed", "canceled"] as const).map(
+                        {(["confirmed", "preparing", "ready", "on-the-way", "completed"] as const).map(
                           (status) => (
                             <button
                               key={status}

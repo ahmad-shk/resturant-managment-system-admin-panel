@@ -133,7 +133,7 @@ export const fetchDashboardData = createAsyncThunk<FetchDashboardResponse, strin
       const pendingOrders = orders.filter((o: any) => o.status !== "completed" && o.status !== "cancelled").length
 
       console.log(
-        "[v0] Dashboard calculation - Total:",
+        "admin Dashboard calculation - Total:",
         totalOrders,
         "Completed:",
         completedOrders,

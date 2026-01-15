@@ -45,10 +45,10 @@ export async function createOrder(order: Omit<RealtimeOrder, "id" | "createdAt" 
 
     const orderRef = ref(database, `orders/${orderId}`)
     await set(orderRef, newOrder)
-    console.log("[v0] Order created:", orderId)
+    console.log("admin Order created:", orderId)
     return orderId
   } catch (error) {
-    console.error("[v0] Error creating order:", error)
+    console.error("admin Error creating order:", error)
     throw error
   }
 }
@@ -60,16 +60,16 @@ export async function getAllOrders(): Promise<RealtimeOrder[]> {
     const snapshot = await get(ordersRef)
 
     if (!snapshot.exists()) {
-      console.log("[v0] No orders found")
+      console.log("admin No orders found")
       return []
     }
 
     const data = snapshot.val()
     const orders: RealtimeOrder[] = Object.values(data)
-    console.log("[v0] Fetched orders:", orders.length)
+    console.log("admin Fetched orders:", orders.length)
     return orders
   } catch (error) {
-    console.error("[v0] Error fetching orders:", error)
+    console.error("admin Error fetching orders:", error)
     throw error
   }
 }
@@ -86,7 +86,7 @@ export async function getOrder(orderId: string): Promise<RealtimeOrder | null> {
 
     return snapshot.val()
   } catch (error) {
-    console.error("[v0] Error fetching order:", error)
+    console.error("admin Error fetching order:", error)
     throw error
   }
 }
@@ -96,9 +96,9 @@ export async function updateOrder(orderId: string, updates: Partial<Omit<Realtim
   try {
     const { id, createdAt, ...cleanUpdates } = updates as any
     await syncOrderUpdateToAllDatabases(orderId, cleanUpdates)
-    console.log("[v0] Order updated in both databases:", orderId)
+    console.log("admin Order updated in both databases:", orderId)
   } catch (error) {
-    console.error("[v0] Error updating order:", error)
+    console.error("admin Error updating order:", error)
     throw error
   }
 }
@@ -107,9 +107,9 @@ export async function updateOrder(orderId: string, updates: Partial<Omit<Realtim
 export async function updateOrderStatus(orderId: string, status: RealtimeOrder["status"]) {
   try {
     await syncOrderStatusToAllDatabases(orderId, status)
-    console.log("[v0] Order status updated in both databases:", orderId, status)
+    console.log("admin Order status updated in both databases:", orderId, status)
   } catch (error) {
-    console.error("[v0] Error updating order status:", error)
+    console.error("admin Error updating order status:", error)
     throw error
   }
 }
@@ -118,9 +118,9 @@ export async function updateOrderStatus(orderId: string, status: RealtimeOrder["
 export async function deleteOrder(orderId: string) {
   try {
     await syncOrderDeleteToAllDatabases(orderId)
-    console.log("[v0] Order deleted from both databases:", orderId)
+    console.log("admin Order deleted from both databases:", orderId)
   } catch (error) {
-    console.error("[v0] Error deleting order:", error)
+    console.error("admin Error deleting order:", error)
     throw error
   }
 }
@@ -140,18 +140,18 @@ export function subscribeToOrders(callback: (orders: RealtimeOrder[]) => void, o
 
         const data = snapshot.val()
         const orders: RealtimeOrder[] = Object.values(data).sort((a: any, b: any) => b.createdAt - a.createdAt)
-        console.log("[v0] Real-time orders update:", orders.length)
+        console.log("admin Real-time orders update:", orders.length)
         callback(orders)
       },
       (error) => {
-        console.error("[v0] Real-time listener error:", error)
+        console.error("admin Real-time listener error:", error)
         onError?.(error)
       },
     )
 
     return unsubscribe
   } catch (error) {
-    console.error("[v0] Error setting up real-time listener:", error)
+    console.error("admin Error setting up real-time listener:", error)
     throw error
   }
 }
@@ -174,18 +174,18 @@ export function subscribeToOrder(
         }
 
         const order: RealtimeOrder = snapshot.val()
-        console.log("[v0] Real-time order update:", orderId)
+        console.log("admin Real-time order update:", orderId)
         callback(order)
       },
       (error) => {
-        console.error("[v0] Real-time listener error for order:", error)
+        console.error("admin Real-time listener error for order:", error)
         onError?.(error)
       },
     )
 
     return unsubscribe
   } catch (error) {
-    console.error("[v0] Error setting up order listener:", error)
+    console.error("admin Error setting up order listener:", error)
     throw error
   }
 }

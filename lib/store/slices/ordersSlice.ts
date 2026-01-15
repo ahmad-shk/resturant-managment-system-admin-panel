@@ -49,10 +49,10 @@ const STATUS_MAP: Record<number, Order["status"]> = {
 // Async thunk to fetch orders
 export const fetchOrders = createAsyncThunk("orders/fetchOrders", async (_, { rejectWithValue }) => {
   try {
-    console.log("[v0] Fetching orders from Firebase...")
+    console.log("admin Fetching orders from Firebase...")
     const q = query(collection(db, "orders"))
     const querySnapshot = await getDocs(q)
-    console.log("[v0] Orders fetched:", querySnapshot.docs.length)
+    console.log("admin Orders fetched:", querySnapshot.docs.length)
 
     const orders = querySnapshot.docs.map((docSnap) => {
       const data = docSnap.data()
@@ -95,10 +95,10 @@ export const fetchOrders = createAsyncThunk("orders/fetchOrders", async (_, { re
 
     const sortedOrders = orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
 
-    console.log("[v0] Processed orders:", sortedOrders)
+    console.log("admin Processed orders:", sortedOrders)
     return sortedOrders
   } catch (error: any) {
-    console.error("[v0] Error fetching orders:", error)
+    console.error("admin Error fetching orders:", error)
     return rejectWithValue(error.message || "Failed to fetch orders")
   }
 })
@@ -122,13 +122,13 @@ export const setupOrdersListener = createAsyncThunk(
   "orders/setupListener",
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      console.log("[v0] Setting up real-time orders listener...")
+      console.log("admin Setting up real-time orders listener...")
       const q = query(collection(db, "orders"))
 
       const unsubscribe = onSnapshot(
         q,
         (querySnapshot) => {
-          console.log("[v0] Real-time update: orders changed")
+          console.log("admin Real-time update: orders changed")
           const orders = querySnapshot.docs.map((docSnap) => {
             const data = docSnap.data()
 
@@ -168,19 +168,19 @@ export const setupOrdersListener = createAsyncThunk(
           })
 
           const sortedOrders = orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
-          console.log("[v0] Real-time orders update:", sortedOrders.length)
+          console.log("admin Real-time orders update:", sortedOrders.length)
 
           dispatch(ordersSlice.actions.setOrders(sortedOrders))
         },
         (error) => {
-          console.error("[v0] Real-time listener error:", error)
+          console.error("admin Real-time listener error:", error)
           dispatch(ordersSlice.actions.setError(error.message))
         },
       )
 
       return unsubscribe
     } catch (error: any) {
-      console.error("[v0] Error setting up listener:", error)
+      console.error("admin Error setting up listener:", error)
       return rejectWithValue(error.message || "Failed to setup orders listener")
     }
   },

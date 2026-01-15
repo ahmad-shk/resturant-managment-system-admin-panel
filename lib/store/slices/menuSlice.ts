@@ -49,7 +49,7 @@ export const fetchMenuItems = createAsyncThunk<
     })) as MenuItem[]
     return items
   } catch (error: any) {
-    console.error("[v0] Error fetching menu:", error)
+    console.error("admin Error fetching menu:", error)
     return rejectWithValue(error.message || "Failed to fetch menu items")
   }
 })
@@ -64,14 +64,14 @@ export const addMenuItem = createAsyncThunk<
   "menu/addMenuItem",
   async (itemData: Omit<MenuItem, "id">, { rejectWithValue }) => {
     try {
-      console.log("[v0] Adding menu item:", itemData.name)
+      console.log("admin Adding menu item:", itemData.name)
       const docRef = await addDoc(collection(db, "menus"), itemData)
-      console.log("[v0] Menu item added with ID:", docRef.id)
+      console.log("admin Menu item added with ID:", docRef.id)
       
       // Return the full item including the new Firestore ID
       return { ...itemData, id: docRef.id } as MenuItem
     } catch (error: any) {
-      console.error("[v0] Error adding menu item:", error)
+      console.error("admin Error adding menu item:", error)
       // FIX: Ensure error.message exists or provide fallback to avoid 'undefined' alert
       return rejectWithValue(error.message || "Failed to add menu item. Check permissions.")
     }
@@ -90,7 +90,7 @@ export const updateMenuItem = createAsyncThunk<
       await updateDoc(doc(db, "menus", id), data)
       return { id, data }
     } catch (error: any) {
-      console.error("[v0] Error updating menu item:", error)
+      console.error("admin Error updating menu item:", error)
       return rejectWithValue(error.message || "Failed to update menu item")
     }
   },
@@ -106,7 +106,7 @@ export const deleteMenuItem = createAsyncThunk<
     await deleteDoc(doc(db, "menus", id))
     return id
   } catch (error: any) {
-    console.error("[v0] Error deleting menu item:", error)
+    console.error("admin Error deleting menu item:", error)
     return rejectWithValue(error.message || "Failed to delete menu item")
   }
 })
