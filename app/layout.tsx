@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Restaurant Admin Panel",
-  description: "Admin dashboard for restaurant management",
+  title: "Restaurant Tarim Admin Panel",
+  description: "Tarim dashboard for restaurant management",
   generator: "v0.app",
 }
 

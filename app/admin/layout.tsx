@@ -54,7 +54,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         } fixed md:relative z-40 w-64 h-screen bg-slate-800 border-r border-slate-700 transition-transform duration-300 md:translate-x-0`}
       >
         <div className="p-6 border-b border-slate-700">
-          <h1 className="text-2xl font-bold text-orange-500">Admin Panel</h1>
+          <h1 className="text-2xl font-bold text-orange-500">Tarim Admin Panel</h1>
         </div>
 
         <nav className="p-4 space-y-2">

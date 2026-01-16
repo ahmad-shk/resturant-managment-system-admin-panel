@@ -45,7 +45,7 @@ export default function AdminProfilePage() {
 
   // Fallback data if profile is not yet fully loaded or available
   const displayData = {
-    name: profile?.name || user?.displayName || "Admin",
+    name: profile?.name || user?.displayName || "Tarim",
     email: profile?.email || user?.email || "Not available",
     restaurantName: profile?.restaurantName || "Not set",
     restaurantPhone: profile?.restaurantPhone || "Not set",
@@ -55,7 +55,7 @@ export default function AdminProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <header>
-        <h1 className="text-3xl font-bold text-white mb-2">Admin Profile</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Tarim Profile</h1>
         <p className="text-slate-400">View your restaurant information and account details</p>
       </header>
 

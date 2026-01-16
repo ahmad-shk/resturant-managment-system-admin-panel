@@ -138,7 +138,7 @@ export const updateOrderStatus = async (orderId: string, statusIndex: number, st
   }
 }
 
-// Admin Profile Functions
+// Tarim Profile Functions
 export interface AdminUser {
   uid: string
   email: string

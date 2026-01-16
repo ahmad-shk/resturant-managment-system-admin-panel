@@ -164,7 +164,7 @@ export const fetchDashboardData = createAsyncThunk<FetchDashboardResponse, strin
       ).length;
 
       // Debugging logs to verify in browser console
-      console.log("Admin Dashboard Calculation Result:", {
+      console.log("Tarim Dashboard Calculation Result:", {
         totalOrders,
         completedOrders,
         pendingOrders,

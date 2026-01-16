@@ -181,7 +181,7 @@ export default function MenuPage() {
       <div className="flex justify-between items-center border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-4xl font-black bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-transparent uppercase tracking-tighter">
-            Kitchen Admin
+            Kitchen Tarim
           </h1>
         </div>
         <button
