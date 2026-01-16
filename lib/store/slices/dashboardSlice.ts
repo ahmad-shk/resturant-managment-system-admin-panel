@@ -104,44 +104,75 @@ export const fetchDashboardData = createAsyncThunk<FetchDashboardResponse, strin
   "dashboard/fetchDashboardData",
   async (timeRange = "weekly", { rejectWithValue }) => {
     try {
-      const q = query(collection(db, "orders"))
-      const querySnapshot = await getDocs(q)
+      const q = query(collection(db, "orders"));
+      const querySnapshot = await getDocs(q);
 
       const orders = querySnapshot.docs.map((doc) => {
-        const data = doc.data()
+        const data = doc.data();
+        
+        // 1. Status Mapping Logic
         const STATUS_MAP: Record<number, string> = {
           0: "confirmed",
           1: "preparing",
           2: "ready",
           3: "on-the-way",
           4: "completed",
+          5: "cancelled",
+        };
+
+        // --- Logic to get status correctly ---
+        let status = "confirmed"; // Default
+
+        // Agar database mein direct status (string) hai to wo use karein
+        if (data.status && typeof data.status === "string") {
+          status = data.status.toLowerCase();
+        } 
+        // Agar currentStatusIndex (number) hai to STATUS_MAP se nikalein
+        else if (data.currentStatusIndex !== undefined) {
+          const index = Number(data.currentStatusIndex);
+          status = STATUS_MAP[index] || "confirmed";
         }
 
-        const status = STATUS_MAP[data.currentStatusIndex ?? 0] || "confirmed"
+        // --- Calculation of Total ---
+        // Agar 'total' missing ho to subtotal + delivery + tax karein
+        const total = data.total 
+          ? Number(data.total) 
+          : (Number(data.subtotal || 0) + Number(data.delivery || 0) + Number(data.tax || 0));
 
         return {
           ...data,
-          status,
           id: doc.id,
-        }
-      })
+          status,
+          total,
+          // Ensure timestamp conversion for chart
+          processedDate: data.orderDate || data.createdAt || data.updatedAt
+        };
+      });
 
-      // Calculate metrics using the mapped status
-      const totalOrders = orders.length
-      const totalEarnings = orders.reduce((sum: number, order: any) => sum + (Number(order.total) || 0), 0)
-      const completedOrders = orders.filter((o: any) => o.status === "completed").length
-      const pendingOrders = orders.filter((o: any) => o.status !== "completed" && o.status !== "cancelled").length
+      // 2. Metrics Calculation
+      const totalOrders = orders.length;
+      
+      // Sabhi orders ka total sum
+      const totalEarnings = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      
+      // Sirf completed status wale orders
+      const completedOrders = orders.filter((o) => o.status === "completed" || o.status === "delivered").length;
+      
+      // Pending orders (na completed, na cancelled)
+      const pendingOrders = orders.filter(
+        (o) => o.status !== "completed" && o.status !== "delivered" && o.status !== "cancelled" && o.status !== "canceled"
+      ).length;
 
-      console.log(
-        "admin Dashboard calculation - Total:",
+      // Debugging logs to verify in browser console
+      console.log("Admin Dashboard Calculation Result:", {
         totalOrders,
-        "Completed:",
         completedOrders,
-        "Pending:",
         pendingOrders,
-      )
+        totalEarnings
+      });
 
-      const chartData = generateChartData(orders, timeRange || "weekly")
+      // 3. Generate Chart Data
+      const chartData = generateChartData(orders, timeRange || "weekly");
 
       return {
         data: {
@@ -151,13 +182,13 @@ export const fetchDashboardData = createAsyncThunk<FetchDashboardResponse, strin
           pendingOrders,
         },
         chartData,
-      }
+      };
     } catch (error: any) {
-      // Returns the error message as the payload for 'rejected' case
-      return rejectWithValue(error.message || "Failed to fetch dashboard data")
+      console.error("Dashboard Fetch Error:", error);
+      return rejectWithValue(error.message || "Failed to fetch dashboard data");
     }
-  },
-)
+  }
+);
 
 // --- Slice ---
 

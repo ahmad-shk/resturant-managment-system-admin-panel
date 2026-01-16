@@ -312,6 +312,9 @@ export default function AdminDashboard() {
     },
   ]
 
+console.log("Dashboard Data:", dashboardData)
+
+
   return (
     <div className="space-y-6">
       <div>
