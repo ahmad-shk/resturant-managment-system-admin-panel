@@ -202,9 +202,8 @@ export default function OrdersPage() {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${
-                statusFilter === status ? "bg-orange-500 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${statusFilter === status ? "bg-orange-500 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                }`}
             >
               {status === "all" ? "All" : status.replace("-", " ")}
             </button>
@@ -257,7 +256,9 @@ export default function OrdersPage() {
                   </div>
                   <div>
                     <p className="text-slate-400 text-sm">Total</p>
-                    <p className="text-white font-semibold">€ {order.total.toFixed(0)}</p>
+                    <p className="text-white font-semibold">
+                      € {Number(order.total || 0).toFixed(0)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-slate-400 text-sm">Date</p>
@@ -307,7 +308,7 @@ export default function OrdersPage() {
                             </p>
                           </div>
                           <div className="text-right text-white font-medium">
-                            € {(item.price * item.quantity).toFixed(0)}
+                            € {(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(0)}
                           </div>
                         </div>
                       ))}
@@ -325,11 +326,10 @@ export default function OrdersPage() {
                               key={status}
                               onClick={() => handleUpdateStatus(order.id, status)}
                               disabled={isLoading}
-                              className={`px-3 py-2 rounded text-sm font-medium transition-colors capitalize disabled:opacity-50 ${
-                                order.status === status
+                              className={`px-3 py-2 rounded text-sm font-medium transition-colors capitalize disabled:opacity-50 ${order.status === status
                                   ? "bg-orange-500 text-white"
                                   : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                              }`}
+                                }`}
                             >
                               {status.replace("-", " ")}
                             </button>
