@@ -257,7 +257,7 @@ export default function OrdersPage() {
                   <div>
                     <p className="text-slate-400 text-sm">Total</p>
                     <p className="text-white font-semibold">
-                      € {Number(order.total || 0).toFixed(0)}
+                      € {Number(order.total || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
@@ -308,7 +308,7 @@ export default function OrdersPage() {
                             </p>
                           </div>
                           <div className="text-right text-white font-medium">
-                            € {(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(0)}
+                            € {(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}
                           </div>
                         </div>
                       ))}
